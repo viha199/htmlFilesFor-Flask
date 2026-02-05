@@ -37,39 +37,6 @@ def root():
     else:
         return render_template("login.html")
 
-@app.route('/signup', methods = ['GET','POST'])
-def signup():
-    if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-        confirmPassword = request.form['confirmPassword']
-        
-        if password != confirmPassword:
-            return render_template('signup.html', errorMessage = 'Passwords do not match.')
-
-        hashed_password = generate_password_hash(password)
-        existing_user = cursor.execute('SELECT 1 FROM USERS WHERE email = ?', (email,)).fetchone()
-        
-        if existing_user:
-            return render_template('signup.html', errorMessage = 'User already exists.')
-        else:
-            cursor.execute('INSERT INTO USERS (email, password) VALUES (?,?)', (email, hashed_password))
-            db.commit()
-            return redirect(url_for('login'))
-    return render_template('signup.html')
-
-@app.route('/login', methods = ['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-        user = cursor.execute('SELECT * FROM USERS WHERE email = ?', (email,)).fetchone()
-        if user and check_password_hash(user['password'], password):
-            login_user(User(user['email']))
-            return redirect(url_for('index'))
-        else:
-            return render_template('login.html', errorMessage = 'Invalid credentials.')
-    return render_template('login.html')
 
 @app.route('/index')
 @login_required
@@ -98,11 +65,6 @@ def participants():
     data = cursor.execute('SELECT * FROM PARTICIPANTS').fetchall()
     return render_template('participants.html', data=data)
 
-@app.route('/logout')
-@login_required 
-def logout():
-    logout_user()
-    return redirect(url_for('login'))
 
 if __name__ == '__main__':
     app.run(debug=True)
